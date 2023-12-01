@@ -1,0 +1,13 @@
+info:
+  contact: {}
+paths:
+  /health:
+    get:
+      description: do health check
+      responses:
+        "200":
+          description: OK
+      summary: health check
+      tags:
+      - health
+swagger: "2.0"
