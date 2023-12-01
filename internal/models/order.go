@@ -70,3 +70,9 @@ func NewOrder(userId string, items []Item, cost float64, status OrderStatus, exp
 		CreatedAt:            time.Now().Format(time.DateTime),
 	}
 }
+
+type CreateOrderDTO struct {
+}
+
+type UpdateOrderDTO struct {
+}
