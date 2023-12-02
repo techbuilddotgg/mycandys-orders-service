@@ -32,6 +32,8 @@ The following environment variables must be set in order for the application to 
 
 ## Running the Application
 
+### Via Docker
+
 To run the application, you must have Docker installed on your machine. Once you have Docker installed, you can run the
 following command to start the application:
 
@@ -39,8 +41,20 @@ following command to start the application:
 docker-compose up
 ```
 
+### Via Go
+
+To run the application via Go, you must have Go installed on your machine. Once you have Go installed, you can run the
+following command to start the application:
+
+```bash
+go run cmd/server/main.go
+# or to run it in development mode
+make dev
+```
+
 ## API Documentation
 
 After running the application the API documentation can be found at the following
 link: http://localhost:8080/swagger/index.html
+
 
