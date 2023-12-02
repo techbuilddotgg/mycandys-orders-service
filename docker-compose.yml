@@ -7,7 +7,5 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
-    environment:
-        - PORT=8080
-        - DATABASE_URL=mongodb://mongo:-D5-436cD4336c-bfEEDEgdA6G-5DbFH@roundhouse.proxy.rlwy.net:12213
-        - DATABASE_NAME=orders
+    env_file:
+      - .env
