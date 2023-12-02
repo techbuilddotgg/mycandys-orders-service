@@ -10,7 +10,7 @@ import (
 // ADD Payment operations?
 
 type OrderHandler struct {
-	orders *repository.OrderRepository
+	orders repository.IOrderRepository[*models.Order, models.CreateOrderDTO, models.UpdateOrderDTO]
 }
 
 func NewOrderHandler() *OrderHandler {
@@ -149,7 +149,7 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context) {
 		return
 	}
 
-	order, err := h.orders.UpdateOne(id, &dto)
+	order, err := h.orders.UpdateOne(id, dto)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Cloud not update order"})
 		return

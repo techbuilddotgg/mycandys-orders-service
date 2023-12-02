@@ -9,11 +9,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+type IOrderRepository[T interface{}, U interface{}, V interface{}] interface {
+	Repository[T, U, V]
+	FindByUser(id string) ([]T, error)
+	FindByStatus(status models.OrderStatus) ([]T, error)
+}
+
 type OrderRepository struct {
 	coll *mongo.Collection
 }
 
-func NewOrderRepository() *OrderRepository {
+func NewOrderRepository() IOrderRepository[*models.Order, models.CreateOrderDTO, models.UpdateOrderDTO] {
 	return &OrderRepository{
 		coll: database.Db.Collection("orders"),
 	}
@@ -97,7 +103,7 @@ func (r *OrderRepository) InsertOne(data models.CreateOrderDTO) (*models.Order, 
 	return order, nil
 }
 
-func (r *OrderRepository) UpdateOne(id string, data *models.UpdateOrderDTO) (*models.Order, error) {
+func (r *OrderRepository) UpdateOne(id string, data models.UpdateOrderDTO) (*models.Order, error) {
 	objectId, _ := primitive.ObjectIDFromHex(id)
 
 	filter := bson.D{{"_id", objectId}}
