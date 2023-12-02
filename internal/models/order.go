@@ -14,17 +14,6 @@ type Item struct {
 	ImageUrl    string  `bson:"image_url" json:"imgUrl"`
 }
 
-func NewItem(id string, name string, price float64, description string, category string, imageUrl string) *Item {
-	return &Item{
-		ID:          id,
-		Name:        name,
-		Price:       price,
-		Description: description,
-		Category:    category,
-		ImageUrl:    imageUrl,
-	}
-}
-
 type OrderStatus string
 
 const (
@@ -37,6 +26,15 @@ const (
 	//OrderStatusFailed    OrderStatus = "failed"
 	//OrderStatusPaid     OrderStatus = "paid"
 )
+
+func IsOrderStatusValid(status string) bool {
+	switch status {
+	case "pending", "shipped", "delivered":
+		return true
+	default:
+		return false
+	}
+}
 
 type Order struct {
 	ID                   primitive.ObjectID `bson:"_id" json:"id"`

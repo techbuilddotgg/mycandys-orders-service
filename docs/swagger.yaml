@@ -1,3 +1,57 @@
+definitions:
+  models.CreateOrderDTO:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      cost:
+        type: number
+      country:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/models.Item'
+        type: array
+      postalCode:
+        type: string
+      status:
+        $ref: '#/definitions/models.OrderStatus'
+      userId:
+        type: string
+    type: object
+  models.Item:
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      imgUrl:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  models.OrderStatus:
+    enum:
+    - pending
+    - shipped
+    - delivered
+    type: string
+    x-enum-varnames:
+    - OrderStatusPending
+    - OrderStatusShipped
+    - OrderStatusDelivered
+  models.UpdateOrderDTO:
+    properties:
+      deliveredAt:
+        type: string
+      status:
+        $ref: '#/definitions/models.OrderStatus'
+    type: object
 info:
   contact: {}
 paths:
@@ -10,4 +64,115 @@ paths:
       summary: health check
       tags:
       - health
+  /orders:
+    get:
+      description: get all orders
+      responses:
+        "200":
+          description: OK
+      summary: get all orders
+      tags:
+      - orders
+    post:
+      consumes:
+      - application/json
+      description: create order
+      parameters:
+      - description: order
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateOrderDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+      summary: create order
+      tags:
+      - orders
+  /orders/{id}:
+    delete:
+      description: delete order
+      parameters:
+      - description: order id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+      summary: delete order
+      tags:
+      - orders
+    get:
+      description: get order by id
+      parameters:
+      - description: order id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+      summary: get order by id
+      tags:
+      - orders
+    put:
+      consumes:
+      - application/json
+      description: update order
+      parameters:
+      - description: order id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: order
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateOrderDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: update order
+      tags:
+      - orders
+  /orders/status/{status}:
+    get:
+      description: get all orders by status
+      parameters:
+      - description: order status
+        in: path
+        name: status
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+      summary: get all orders by status
+      tags:
+      - orders
+  /orders/user/{id}:
+    get:
+      description: get all orders by user
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+      summary: get all orders by user
+      tags:
+      - orders
 swagger: "2.0"

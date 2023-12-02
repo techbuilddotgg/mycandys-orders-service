@@ -88,8 +88,8 @@ func (r *OrderRepository) FindByStatus(status models.OrderStatus) ([]*models.Ord
 	return orders, nil
 }
 
-func (r *OrderRepository) InsertOne(data *models.CreateOrderDTO) (*models.Order, error) {
-	order := models.NewOrder(*data)
+func (r *OrderRepository) InsertOne(data models.CreateOrderDTO) (*models.Order, error) {
+	order := models.NewOrder(data)
 	_, err := r.coll.InsertOne(context.Background(), order)
 	if err != nil {
 		return nil, err

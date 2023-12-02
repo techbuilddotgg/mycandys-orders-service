@@ -17,6 +17,256 @@
                     }
                 }
             }
+        },
+        "/orders": {
+            "get": {
+                "description": "get all orders",
+                "tags": [
+                    "orders"
+                ],
+                "summary": "get all orders",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "description": "create order",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "create order",
+                "parameters": [
+                    {
+                        "description": "order",
+                        "name": "order",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateOrderDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
+        "/orders/status/{status}": {
+            "get": {
+                "description": "get all orders by status",
+                "tags": [
+                    "orders"
+                ],
+                "summary": "get all orders by status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "order status",
+                        "name": "status",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/orders/user/{id}": {
+            "get": {
+                "description": "get all orders by user",
+                "tags": [
+                    "orders"
+                ],
+                "summary": "get all orders by user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/orders/{id}": {
+            "get": {
+                "description": "get order by id",
+                "tags": [
+                    "orders"
+                ],
+                "summary": "get order by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "order id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "put": {
+                "description": "update order",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "update order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "order id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "order",
+                        "name": "order",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateOrderDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "description": "delete order",
+                "tags": [
+                    "orders"
+                ],
+                "summary": "delete order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "order id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.CreateOrderDTO": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "cost": {
+                    "type": "number"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Item"
+                    }
+                },
+                "postalCode": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/models.OrderStatus"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Item": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "imgUrl": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.OrderStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "shipped",
+                "delivered"
+            ],
+            "x-enum-varnames": [
+                "OrderStatusPending",
+                "OrderStatusShipped",
+                "OrderStatusDelivered"
+            ]
+        },
+        "models.UpdateOrderDTO": {
+            "type": "object",
+            "properties": {
+                "deliveredAt": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/models.OrderStatus"
+                }
+            }
         }
     }
 }
