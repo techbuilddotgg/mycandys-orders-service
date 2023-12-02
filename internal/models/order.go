@@ -44,8 +44,8 @@ type Order struct {
 	Items                []Item             `bson:"items" json:"items"`
 	Cost                 float64            `bson:"cost" json:"cost"`
 	Status               OrderStatus        `bson:"status" json:"status"`
-	ExpectedDeliveryDate int64              `bson:"expected_delivery_date" json:"expectedDeliveryDate"`
-	DeliveredAt          int64              `bson:"delivered_at" json:"deliveredAt"`
+	ExpectedDeliveryDate string             `bson:"expected_delivery_date" json:"expectedDeliveryDate"`
+	DeliveredAt          string             `bson:"delivered_at" json:"deliveredAt"`
 	Address              string             `bson:"address" json:"address"`
 	Country              string             `bson:"country" json:"country"`
 	City                 string             `bson:"city" json:"city"`
@@ -54,25 +54,36 @@ type Order struct {
 	UpdatedAt            string             `bson:"updated_at" json:"updatedAt"`
 }
 
-func NewOrder(userId string, items []Item, cost float64, status OrderStatus, expectedDeliveryDate int64, deliveredAt int64, address string, country string, city string, postalCode string) *Order {
+func NewOrder(dto CreateOrderDTO) *Order {
+	expectedDeliveryDate := time.Now().AddDate(0, 0, 7).Format(time.DateOnly)
+
 	return &Order{
 		ID:                   primitive.NewObjectID(),
-		UserId:               userId,
-		Items:                items,
-		Cost:                 cost,
-		Status:               status,
+		UserId:               dto.UserId,
+		Items:                dto.Items,
+		Cost:                 dto.Cost,
+		Status:               dto.Status,
 		ExpectedDeliveryDate: expectedDeliveryDate,
-		DeliveredAt:          deliveredAt,
-		Address:              address,
-		Country:              country,
-		City:                 city,
-		PostalCode:           postalCode,
+		Address:              dto.Address,
+		Country:              dto.Country,
+		City:                 dto.City,
+		PostalCode:           dto.PostalCode,
 		CreatedAt:            time.Now().Format(time.DateTime),
 	}
 }
 
 type CreateOrderDTO struct {
+	UserId     string      `json:"userId"`
+	Items      []Item      `json:"items"`
+	Cost       float64     `json:"cost"`
+	Status     OrderStatus `json:"status"`
+	Address    string      `json:"address"`
+	Country    string      `json:"country"`
+	City       string      `json:"city"`
+	PostalCode string      `json:"postalCode"`
 }
 
 type UpdateOrderDTO struct {
+	Status      OrderStatus `json:"status"`
+	DeliveredAt string      `json:"deliveredAt"`
 }
