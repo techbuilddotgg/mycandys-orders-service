@@ -22,7 +22,7 @@ go.work
 
 .env
 
-temp
+/tmp
 bin
 
 .idea
