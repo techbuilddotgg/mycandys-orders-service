@@ -7,13 +7,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"time"
 )
-
-type IOrderRepository[T interface{}, U interface{}, V interface{}] interface {
-	Repository[T, U, V]
-	FindByUser(id string) ([]T, error)
-	FindByStatus(status models.OrderStatus) ([]T, error)
-}
 
 type OrderRepository struct {
 	coll *mongo.Collection
@@ -112,11 +108,14 @@ func (r *OrderRepository) UpdateOne(id string, data models.UpdateOrderDTO) (*mod
 		{"$set", bson.D{
 			{"status", data.Status},
 			{"delivered_at", data.DeliveredAt},
+			{"updated_at", time.Now().Format(time.DateTime)},
 		}},
 	}
 
 	var order models.Order
-	err := r.coll.FindOneAndUpdate(context.Background(), filter, update).Decode(&order)
+	err := r.coll.FindOneAndUpdate(
+		context.Background(), filter, update,
+		options.FindOneAndUpdate().SetReturnDocument(options.After)).Decode(&order)
 	if err != nil {
 		return nil, err
 	}

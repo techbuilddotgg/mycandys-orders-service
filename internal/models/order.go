@@ -82,6 +82,6 @@ type CreateOrderDTO struct {
 }
 
 type UpdateOrderDTO struct {
-	Status      OrderStatus `json:"status"`
-	DeliveredAt string      `json:"deliveredAt"`
+	Status      *OrderStatus `json:"status"`
+	DeliveredAt *string      `json:"deliveredAt"`
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mycandys/orders/internal/models"
 	"github.com/mycandys/orders/internal/repository"
+	"time"
 )
 
 // CRUD operations for orders
@@ -147,6 +148,14 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context) {
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
+	}
+
+	if dto.DeliveredAt != nil {
+		_, err := time.Parse(time.DateTime, *dto.DeliveredAt)
+		if err != nil {
+			c.JSON(400, gin.H{"error": "Invalid date time format"})
+			return
+		}
 	}
 
 	order, err := h.orders.UpdateOne(id, dto)
