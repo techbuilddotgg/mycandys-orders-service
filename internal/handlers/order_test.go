@@ -355,3 +355,147 @@ func TestDeleteOrderNotFound(t *testing.T) {
 		t.Errorf("handler returned unexpected body: got %v want %v", rec.Body.String(), "[]")
 	}
 }
+
+func TestGetOrdersByUser(t *testing.T) {
+	server := gin.Default()
+
+	handler := &OrderHandler{
+		orders: &mocks.OrderRepositoryMock{},
+	}
+
+	order := &models.Order{
+		ID:                   primitive.NewObjectID(),
+		UserID:               "1",
+		Items:                make([]models.Item, 0),
+		Cost:                 100.0,
+		Status:               models.OrderStatusPending,
+		ExpectedDeliveryDate: "2021-01-01",
+		DeliveredAt:          "2021-01-01",
+		Address:              "address",
+		Country:              "country",
+		City:                 "city",
+		PostalCode:           "postalCode",
+		CreatedAt:            "2021-01-01",
+		UpdatedAt:            "2021-01-01",
+	}
+
+	handler.orders.(*mocks.OrderRepositoryMock).On("FindByUser", order.UserID).Return([]*models.Order{
+		order,
+	}, nil)
+
+	server.GET("/orders/user/:id", handler.GetOrdersByUser)
+
+	req, _ := http.NewRequest("GET", "/orders/user/"+order.UserID, nil)
+
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	var body []models.Order
+	_ = json.Unmarshal(rec.Body.Bytes(), &body)
+
+	if len(body) != 1 {
+		t.Errorf("handler returned unexpected body: got %v want %v", rec.Body.String(), "[]")
+	}
+
+	if body[0].ID != order.ID {
+		t.Errorf("handler returned unexpected body: got %v want %v", rec.Body.String(), "[]")
+	}
+}
+
+func TestGetOrdersByUserNotFound(t *testing.T) {
+	server := gin.Default()
+
+	handler := &OrderHandler{
+		orders: &mocks.OrderRepositoryMock{},
+	}
+
+	handler.orders.(*mocks.OrderRepositoryMock).On("FindByUser", "1").Return(nil, nil)
+
+	server.GET("/orders/user/:id", handler.GetOrdersByUser)
+
+	req, _ := http.NewRequest("GET", "/orders/user/1", nil)
+
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	var body []models.Order
+	_ = json.Unmarshal(rec.Body.Bytes(), &body)
+
+	if len(body) != 0 {
+		t.Errorf("handler returned unexpected body: got %v want %v", rec.Body.String(), "[]")
+	}
+}
+
+func TestGetOrderByStatus(t *testing.T) {
+	server := gin.Default()
+
+	handler := &OrderHandler{
+		orders: &mocks.OrderRepositoryMock{},
+	}
+
+	order := &models.Order{
+		ID:                   primitive.NewObjectID(),
+		UserID:               "1",
+		Items:                make([]models.Item, 0),
+		Cost:                 100.0,
+		Status:               models.OrderStatusPending,
+		ExpectedDeliveryDate: "2021-01-01",
+		DeliveredAt:          "2021-01-01",
+		Address:              "address",
+		Country:              "country",
+		City:                 "city",
+		PostalCode:           "postalCode",
+		CreatedAt:            "2021-01-01",
+		UpdatedAt:            "2021-01-01",
+	}
+
+	handler.orders.(*mocks.OrderRepositoryMock).On("FindByStatus", order.Status).Return([]*models.Order{
+		order,
+	}, nil)
+
+	server.GET("/orders/status/:status", handler.GetOrderByStatus)
+
+	req, _ := http.NewRequest("GET", "/orders/status/"+string(order.Status), nil)
+
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	var body []models.Order
+	_ = json.Unmarshal(rec.Body.Bytes(), &body)
+
+	if len(body) != 1 {
+		t.Errorf("handler returned unexpected body: got %v want %v", rec.Body.String(), "[]")
+	}
+
+	if body[0].ID != order.ID {
+		t.Errorf("handler returned unexpected body: got %v want %v", rec.Body.String(), "[]")
+	}
+}
+
+func TestGetOrderByStatusNotFound(t *testing.T) {
+	server := gin.Default()
+
+	handler := &OrderHandler{
+		orders: &mocks.OrderRepositoryMock{},
+	}
+
+	handler.orders.(*mocks.OrderRepositoryMock).On("FindByStatus", models.OrderStatus("invalid")).Return(nil, nil)
+
+	server.GET("/orders/status/:status", handler.GetOrderByStatus)
+
+	req, _ := http.NewRequest("GET", "/orders/status/invalid", nil)
+
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	var body []models.Order
+	_ = json.Unmarshal(rec.Body.Bytes(), &body)
+
+	if len(body) != 0 {
+		t.Errorf("handler returned unexpected body: got %v want %v", rec.Body.String(), "[]")
+	}
+}
