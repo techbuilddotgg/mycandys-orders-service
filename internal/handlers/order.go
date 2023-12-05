@@ -4,14 +4,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mycandys/orders/internal/models"
 	"github.com/mycandys/orders/internal/repository"
+	"github.com/mycandys/orders/internal/services"
 	"time"
 )
 
-// CRUD operations for orders
-// ADD Payment operations?
-
 type OrderHandler struct {
-	orders repository.IOrderRepository[*models.Order, models.CreateOrderDTO, models.UpdateOrderDTO]
+	orders        repository.IOrderRepository[*models.Order, models.CreateOrderDTO, models.UpdateOrderDTO]
+	notifications services.NotificationService
 }
 
 func NewOrderHandler() *OrderHandler {
@@ -32,7 +31,7 @@ func (h *OrderHandler) GetOrder(c *gin.Context) {
 	id := c.Param("id")
 
 	o, err := h.orders.FindOne(id)
-	if err != nil {
+	if err != nil || o == nil {
 		c.JSON(404, gin.H{"error": "Order not found"})
 		return
 	}
@@ -127,6 +126,18 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
+	// TODO send order to notification service and let them handle
+	//err = h.notifications.SendEmail(services.EmailData{
+	//	Title:   "Order created",
+	//	Message: "Your order has been created",
+	//	Type:    "order_created",
+	//	UserID:  order.UserID,
+	//})
+	//
+	//if err != nil {
+	//	log.Print(err.Error())
+	//}
+
 	c.JSON(201, order)
 }
 
@@ -163,6 +174,18 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Cloud not update order"})
 		return
 	}
+
+	// TODO send order to notification service and let them handle
+	//err = h.notifications.SendEmail(services.EmailData{
+	//	Title:   "Order created",
+	//	Message: "Your order has been created",
+	//	Type:    "order_created",
+	//	UserID:  order.UserID,
+	//})
+	//
+	//if err != nil {
+	//	log.Print(err.Error())
+	//}
 
 	c.JSON(200, order)
 }

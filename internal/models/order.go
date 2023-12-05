@@ -38,7 +38,7 @@ func IsOrderStatusValid(status string) bool {
 
 type Order struct {
 	ID                   primitive.ObjectID `bson:"_id" json:"id"`
-	UserId               string             `bson:"user_id" json:"userId"`
+	UserID               string             `bson:"user_id" json:"userId"`
 	Items                []Item             `bson:"items" json:"items"`
 	Cost                 float64            `bson:"cost" json:"cost"`
 	Status               OrderStatus        `bson:"status" json:"status"`
@@ -57,10 +57,10 @@ func NewOrder(dto CreateOrderDTO) *Order {
 
 	return &Order{
 		ID:                   primitive.NewObjectID(),
-		UserId:               dto.UserId,
+		UserID:               dto.UserId,
 		Items:                dto.Items,
 		Cost:                 dto.Cost,
-		Status:               dto.Status,
+		Status:               OrderStatusPending,
 		ExpectedDeliveryDate: expectedDeliveryDate,
 		Address:              dto.Address,
 		Country:              dto.Country,
@@ -71,14 +71,13 @@ func NewOrder(dto CreateOrderDTO) *Order {
 }
 
 type CreateOrderDTO struct {
-	UserId     string      `json:"userId"`
-	Items      []Item      `json:"items"`
-	Cost       float64     `json:"cost"`
-	Status     OrderStatus `json:"status"`
-	Address    string      `json:"address"`
-	Country    string      `json:"country"`
-	City       string      `json:"city"`
-	PostalCode string      `json:"postalCode"`
+	UserId     string  `json:"userId"`
+	Items      []Item  `json:"items"`
+	Cost       float64 `json:"cost"`
+	Address    string  `json:"address"`
+	Country    string  `json:"country"`
+	City       string  `json:"city"`
+	PostalCode string  `json:"postalCode"`
 }
 
 type UpdateOrderDTO struct {
