@@ -13,8 +13,6 @@ FROM alpine:latest as runner
 
 WORKDIR /app
 
-COPY --from=builder /app/.env ./.env
-
 COPY --from=builder /app/bin/main ./bin/main
 
 EXPOSE 8080

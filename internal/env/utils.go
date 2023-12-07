@@ -6,9 +6,7 @@ import (
 )
 
 func GetEnvVar(key string) (string, error) {
-	if err := godotenv.Load(".env"); err != nil {
-		return "", err
-	}
+	godotenv.Load(".env")
 
 	value := os.Getenv(key)
 	if len(value) == 0 {
