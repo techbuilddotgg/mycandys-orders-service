@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/joho/godotenv"
 	"github.com/mycandys/orders/internal/database"
 	"github.com/mycandys/orders/internal/env"
 	"github.com/mycandys/orders/internal/routes"
@@ -16,6 +17,8 @@ import (
 )
 
 func main() {
+	godotenv.Load(".env")
+
 	port, err := env.GetEnvVar(env.PORT)
 	if err != nil {
 		panic(err)
