@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/mycandys/orders/internal/env"
+	"github.com/mycandys/orders/internal/models"
 	"log"
 	"net/http"
 )
@@ -14,6 +15,24 @@ type EmailData struct {
 	Message string `json:"message"`
 	Type    string `json:"type"`
 	UserID  string `json:"user"`
+}
+
+func NewOrderStatusUpdatedEmail(userId string, orderID string, status models.OrderStatus) *EmailData {
+	return &EmailData{
+		Title:   "Order status updated",
+		Message: fmt.Sprintf("Your order %s has been updated to %s", orderID, status),
+		Type:    "order_status_updated",
+		UserID:  userId,
+	}
+}
+
+func NewOrderCreatedEmail(userId string, orderID string) *EmailData {
+	return &EmailData{
+		Title:   "Order created",
+		Message: fmt.Sprintf("Your order %s has been created", orderID),
+		Type:    "order_created",
+		UserID:  userId,
+	}
 }
 
 type NotificationService struct {
@@ -31,7 +50,7 @@ func NewNotificationService() *NotificationService {
 	}
 }
 
-func (s *NotificationService) SendEmail(data EmailData) error {
+func (s *NotificationService) SendEmail(data *EmailData) error {
 	payload, err := json.Marshal(data)
 	if err != nil {
 		return err

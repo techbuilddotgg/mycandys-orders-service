@@ -5,17 +5,21 @@ import (
 	"github.com/mycandys/orders/internal/models"
 	"github.com/mycandys/orders/internal/repository"
 	"github.com/mycandys/orders/internal/services"
+	"log"
 	"time"
 )
 
 type OrderHandler struct {
 	orders        repository.IOrderRepository[*models.Order, models.CreateOrderDTO, models.UpdateOrderDTO]
-	notifications services.NotificationService
+	notifications *services.NotificationService
+	carts         *services.CartService
 }
 
 func NewOrderHandler() *OrderHandler {
 	return &OrderHandler{
-		orders: repository.NewOrderRepository(),
+		orders:        repository.NewOrderRepository(),
+		notifications: services.NewNotificationService(),
+		carts:         services.NewCartService(),
 	}
 }
 
@@ -126,17 +130,15 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	// TODO send order to notification service and let them handle
-	//err = h.notifications.SendEmail(services.EmailData{
-	//	Title:   "Order created",
-	//	Message: "Your order has been created",
-	//	Type:    "order_created",
-	//	UserID:  order.UserID,
-	//})
-	//
-	//if err != nil {
-	//	log.Print(err.Error())
-	//}
+	err = h.carts.DeleteCart(dto.CartID)
+	if err != nil {
+		log.Print(err.Error())
+	}
+
+	err = h.notifications.SendEmail(services.NewOrderCreatedEmail(order.UserID, order.ID.String()))
+	if err != nil {
+		log.Print(err.Error())
+	}
 
 	c.JSON(201, order)
 }
@@ -175,17 +177,12 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context) {
 		return
 	}
 
-	// TODO send order to notification service and let them handle
-	//err = h.notifications.SendEmail(services.EmailData{
-	//	Title:   "Order created",
-	//	Message: "Your order has been created",
-	//	Type:    "order_created",
-	//	UserID:  order.UserID,
-	//})
-	//
-	//if err != nil {
-	//	log.Print(err.Error())
-	//}
+	err = h.notifications.SendEmail(
+		services.NewOrderStatusUpdatedEmail(
+			order.UserID, order.ID.String(), order.Status))
+	if err != nil {
+		log.Print(err.Error())
+	}
 
 	c.JSON(200, order)
 }

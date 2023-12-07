@@ -78,6 +78,7 @@ type CreateOrderDTO struct {
 	Country    string  `json:"country"`
 	City       string  `json:"city"`
 	PostalCode string  `json:"postalCode"`
+	CartID     string  `json:"cartId"`
 }
 
 type UpdateOrderDTO struct {

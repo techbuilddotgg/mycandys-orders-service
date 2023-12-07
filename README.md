@@ -15,7 +15,7 @@ The following environment variables must be set in order for the application to 
 | PORT                     | The port to run the application on.       |
 | DATABASE_URL             | The URL of the database to connect to.    |
 | DATABASE_NAME            | The name of the database to connect to.   |
-| PRODUCT_SERVICE_URL      | The URL of the Product Microservice.      |
+| CART_SERVICE_URL         | The URL of the Cart Microservice.         |
 | NOTIFICATION_SERVICE_URL | The URL of the Notification Microservice. |
 | AUTH_SERVICE_URL         | The URL of the Auth Microservice.         |
 
@@ -25,7 +25,7 @@ The following environment variables must be set in order for the application to 
     PORT=8080
     DATABASE_URL=mongodb://localhost:27017
     DATABASE_NAME=orders
-    PRODUCT_SERVICE_URL=http://localhost:8081
+    CART_SERVICE_URL=http://localhost:8081
     NOTIFICATION_SERVICE_URL=http://localhost:8082
     AUTH_SERVICE_URL=http://localhost:8083
 ```

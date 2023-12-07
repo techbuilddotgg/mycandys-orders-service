@@ -9,6 +9,8 @@ func setupOrdersRoutes(app *gin.Engine) {
 	orders := app.Group("/orders")
 	ordersHandler := handlers.NewOrderHandler()
 
+	// orders.Use(middlewares.Auth())
+
 	orders.GET(":id", ordersHandler.GetOrder)
 	orders.GET("", ordersHandler.GetOrders)
 	orders.GET("/user/:id", ordersHandler.GetOrdersByUser)
