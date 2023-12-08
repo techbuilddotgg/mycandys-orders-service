@@ -130,7 +130,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	err = h.carts.DeleteCart(dto.CartID)
+	err = h.carts.ClearCart(dto.CartID)
 	if err != nil {
 		log.Print(err.Error())
 	}

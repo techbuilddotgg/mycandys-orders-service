@@ -22,8 +22,8 @@ func NewCartService() *CartService {
 	}
 }
 
-func (s *CartService) DeleteCart(cartId string) error {
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/carts/%s", s.URL, cartId), nil)
+func (s *CartService) ClearCart(cartId string) error {
+	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/carts/%s/clear", s.URL, cartId), nil)
 	if err != nil {
 		return err
 	}
