@@ -10,9 +10,6 @@ func setupOrdersRoutes(app *gin.Engine) {
 	orders := app.Group("/orders")
 	ordersHandler := handlers.NewOrderHandler()
 
-	middleware := middlewares.NewMiddleware()
-	requiredAuth := orders.Use(middleware.Auth())
-
 	orders.GET(":id", ordersHandler.GetOrder)
 	orders.GET("", ordersHandler.GetOrders)
 	orders.GET("/user/:id", ordersHandler.GetOrdersByUser)
@@ -21,6 +18,9 @@ func setupOrdersRoutes(app *gin.Engine) {
 	orders.PUT(":id", ordersHandler.UpdateOrder)
 	orders.DELETE(":id", ordersHandler.DeleteOrder)
 	orders.DELETE("", ordersHandler.DeleteAllOrders)
+
+	middleware := middlewares.NewMiddleware()
+	requiredAuth := orders.Use(middleware.Auth())
 
 	requiredAuth.GET("/me", ordersHandler.GetMyOrders)
 	requiredAuth.GET("/me/status/:status", ordersHandler.GetMyOrdersByStatus)
