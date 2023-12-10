@@ -3,6 +3,8 @@ definitions:
     properties:
       address:
         type: string
+      cartId:
+        type: string
       city:
         type: string
       cost:
@@ -15,8 +17,6 @@ definitions:
         type: array
       postalCode:
         type: string
-      status:
-        $ref: '#/definitions/models.OrderStatus'
       userId:
         type: string
     type: object
@@ -65,6 +65,14 @@ paths:
       tags:
       - health
   /orders:
+    delete:
+      description: delete all orders
+      responses:
+        "200":
+          description: OK
+      summary: delete all orders
+      tags:
+      - orders
     get:
       description: get all orders
       responses:
@@ -145,6 +153,44 @@ paths:
       summary: update order
       tags:
       - orders
+  /orders/me:
+    delete:
+      description: delete all orders by user
+      responses:
+        "200":
+          description: OK
+      security:
+      - ApiKeyAuth: []
+      summary: delete all orders by user
+      tags:
+      - orders
+    get:
+      description: get all orders by user
+      responses:
+        "200":
+          description: OK
+      security:
+      - ApiKeyAuth: []
+      summary: get all orders by user
+      tags:
+      - orders
+  /orders/me/status/{status}:
+    get:
+      description: get all orders by status
+      parameters:
+      - description: order status
+        in: path
+        name: status
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+      security:
+      - ApiKeyAuth: []
+      summary: get all orders by status
+      tags:
+      - orders
   /orders/status/{status}:
     get:
       description: get all orders by status
@@ -175,4 +221,9 @@ paths:
       summary: get all orders by user
       tags:
       - orders
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

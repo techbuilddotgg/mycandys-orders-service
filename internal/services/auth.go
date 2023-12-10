@@ -29,7 +29,7 @@ type VerifyTokenResponse struct {
 }
 
 func (s *AuthService) ValidateToken(token string) (*VerifyTokenResponse, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/atuh/verify", s.URL), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/auth/verify", s.URL), nil)
 	if err != nil {
 		return nil, err
 	}

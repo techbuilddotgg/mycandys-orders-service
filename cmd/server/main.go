@@ -16,8 +16,12 @@ import (
 	"time"
 )
 
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
-	godotenv.Load(".env")
+	// important only in development
+	_ = godotenv.Load(".env")
 
 	port, err := env.GetEnvVar(env.PORT)
 	if err != nil {

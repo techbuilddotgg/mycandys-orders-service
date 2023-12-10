@@ -13,4 +13,5 @@ func InitInfo() {
 	docs.SwaggerInfo.Version = "1.0"
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 	docs.SwaggerInfo.Host = swaggerUri
+
 }

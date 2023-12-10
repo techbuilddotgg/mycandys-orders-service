@@ -3,6 +3,7 @@ package mocks
 import (
 	"github.com/mycandys/orders/internal/models"
 	"github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type OrderRepositoryMock struct {
@@ -161,4 +162,88 @@ func (_m *OrderRepositoryMock) DeleteOne(id string) (*models.Order, error) {
 	}
 
 	return r0, r1
+}
+
+func (_m *OrderRepositoryMock) FindMany(filter bson.D) ([]*models.Order, error) {
+	ret := _m.Called(filter)
+
+	var r0 []*models.Order
+	if rf, ok := ret.Get(0).(func(bson.D) []*models.Order); ok {
+		r0 = rf(filter)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*models.Order)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(bson.D) error); ok {
+		r1 = rf(filter)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+func (_m *OrderRepositoryMock) FindByUserAndStatus(id string, status models.OrderStatus) ([]*models.Order, error) {
+	ret := _m.Called(id, status)
+
+	var r0 []*models.Order
+	if rf, ok := ret.Get(0).(func(string, models.OrderStatus) []*models.Order); ok {
+		r0 = rf(id, status)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*models.Order)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, models.OrderStatus) error); ok {
+		r1 = rf(id, status)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+
+}
+
+func (_m *OrderRepositoryMock) DeleteMany(filter bson.D) error {
+	ret := _m.Called(filter)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(bson.D) error); ok {
+		r0 = rf(filter)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+func (_m *OrderRepositoryMock) DeleteAllByUser(id string) error {
+	ret := _m.Called(id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+func (_m *OrderRepositoryMock) DeleteAll() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }

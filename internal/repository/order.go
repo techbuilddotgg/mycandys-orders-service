@@ -15,7 +15,7 @@ type OrderRepository struct {
 	coll *mongo.Collection
 }
 
-func NewOrderRepository() IOrderRepository[*models.Order, models.CreateOrderDTO, models.UpdateOrderDTO] {
+func NewOrderRepository() IOrderRepository[*models.Order, models.CreateOrderDTO, models.UpdateOrderDTO, bson.D] {
 	return &OrderRepository{
 		coll: database.Db.Collection("orders"),
 	}
@@ -34,10 +34,10 @@ func (r *OrderRepository) FindOne(id string) (*models.Order, error) {
 	return &order, nil
 }
 
-func (r *OrderRepository) FindAll() ([]*models.Order, error) {
+func (r *OrderRepository) FindMany(filter bson.D) ([]*models.Order, error) {
 	orders := make([]*models.Order, 0)
 
-	cursor, err := r.coll.Find(context.Background(), bson.D{})
+	cursor, err := r.coll.Find(context.Background(), filter)
 	if err != nil {
 		return nil, err
 	}
@@ -49,45 +49,25 @@ func (r *OrderRepository) FindAll() ([]*models.Order, error) {
 		}
 		orders = append(orders, &order)
 	}
+
 	return orders, nil
+
+}
+
+func (r *OrderRepository) FindAll() ([]*models.Order, error) {
+	return r.FindMany(bson.D{})
 }
 
 func (r *OrderRepository) FindByUser(id string) ([]*models.Order, error) {
-	orders := make([]*models.Order, 0)
-
-	cursor, err := r.coll.Find(context.Background(), bson.D{{"user_id", id}})
-	if err != nil {
-		return nil, err
-	}
-
-	for cursor.Next(context.Background()) {
-		var order models.Order
-		if err := cursor.Decode(&order); err != nil {
-			return nil, err
-		}
-		orders = append(orders, &order)
-	}
-
-	return orders, nil
+	return r.FindMany(bson.D{{"user_id", id}})
 }
 
 func (r *OrderRepository) FindByStatus(status models.OrderStatus) ([]*models.Order, error) {
-	orders := make([]*models.Order, 0)
+	return r.FindMany(bson.D{{"status", status}})
+}
 
-	cursor, err := r.coll.Find(context.Background(), bson.D{{"status", status}})
-	if err != nil {
-		return nil, err
-	}
-
-	for cursor.Next(context.Background()) {
-		var order models.Order
-		if err := cursor.Decode(&order); err != nil {
-			return nil, err
-		}
-		orders = append(orders, &order)
-	}
-
-	return orders, nil
+func (r *OrderRepository) FindByUserAndStatus(id string, status models.OrderStatus) ([]*models.Order, error) {
+	return r.FindMany(bson.D{{"user_id", id}, {"status", status}})
 }
 
 func (r *OrderRepository) InsertOne(data models.CreateOrderDTO) (*models.Order, error) {
@@ -135,4 +115,20 @@ func (r *OrderRepository) DeleteOne(id string) (*models.Order, error) {
 	}
 
 	return &order, nil
+}
+
+func (r *OrderRepository) DeleteMany(filter bson.D) error {
+	_, err := r.coll.DeleteMany(context.Background(), filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *OrderRepository) DeleteAllByUser(userId string) error {
+	return r.DeleteMany(bson.D{{"user_id", userId}})
+}
+
+func (r *OrderRepository) DeleteAll() error {
+	return r.DeleteMany(bson.D{})
 }

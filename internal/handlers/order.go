@@ -5,12 +5,13 @@ import (
 	"github.com/mycandys/orders/internal/models"
 	"github.com/mycandys/orders/internal/repository"
 	"github.com/mycandys/orders/internal/services"
+	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"time"
 )
 
 type OrderHandler struct {
-	orders        repository.IOrderRepository[*models.Order, models.CreateOrderDTO, models.UpdateOrderDTO]
+	orders        repository.IOrderRepository[*models.Order, models.CreateOrderDTO, models.UpdateOrderDTO, bson.D]
 	notifications *services.NotificationService
 	carts         *services.CartService
 }
@@ -130,14 +131,18 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	err = h.carts.ClearCart(dto.CartID)
-	if err != nil {
-		log.Print(err.Error())
+	if h.carts != nil {
+		err = h.carts.ClearCart(dto.CartID)
+		if err != nil {
+			log.Print(err.Error())
+		}
 	}
 
-	err = h.notifications.SendEmail(services.NewOrderCreatedEmail(order.UserID, order.ID.String()))
-	if err != nil {
-		log.Print(err.Error())
+	if h.notifications != nil {
+		err = h.notifications.SendEmail(services.NewOrderCreatedEmail(order.UserID, order.ID.String()))
+		if err != nil {
+			log.Print(err.Error())
+		}
 	}
 
 	c.JSON(201, order)
@@ -171,17 +176,24 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context) {
 		}
 	}
 
+	if *dto.Status == models.OrderStatusDelivered && dto.DeliveredAt == nil {
+		dto.DeliveredAt = new(string)
+		*dto.DeliveredAt = time.Now().Format(time.DateTime)
+	}
+
 	order, err := h.orders.UpdateOne(id, dto)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Cloud not update order"})
 		return
 	}
 
-	err = h.notifications.SendEmail(
-		services.NewOrderStatusUpdatedEmail(
-			order.UserID, order.ID.String(), order.Status))
-	if err != nil {
-		log.Print(err.Error())
+	if h.notifications != nil {
+		err = h.notifications.SendEmail(
+			services.NewOrderStatusUpdatedEmail(
+				order.UserID, order.ID.String(), order.Status))
+		if err != nil {
+			log.Print(err.Error())
+		}
 	}
 
 	c.JSON(200, order)
@@ -205,4 +217,89 @@ func (h *OrderHandler) DeleteOrder(c *gin.Context) {
 	}
 
 	c.JSON(200, order)
+}
+
+// GetMyOrders Orders godoc
+// @Summary get all orders by user
+// @Tags orders
+// @Schemes
+// @Description get all orders by user
+// @Security ApiKeyAuth
+// @Success 200
+// @Router /orders/me [get]
+func (h *OrderHandler) GetMyOrders(c *gin.Context) {
+	userId := c.MustGet("userId").(string)
+
+	orders, err := h.orders.FindByUser(userId)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "No orders found"})
+		return
+	}
+
+	c.JSON(200, orders)
+}
+
+// GetMyOrdersByStatus Orders godoc
+// @Summary get all orders by status
+// @Tags orders
+// @Schemes
+// @Description get all orders by status
+// @Security ApiKeyAuth
+// @Param status path string true "order status"
+// @Success 200
+// @Router /orders/me/status/{status} [get]
+func (h *OrderHandler) GetMyOrdersByStatus(c *gin.Context) {
+	userId := c.MustGet("userId").(string)
+	status := c.Param("status")
+
+	isValid := models.IsOrderStatusValid(status)
+	if !isValid {
+		c.JSON(400, gin.H{"error": "Invalid order status"})
+		return
+	}
+
+	orders, err := h.orders.FindByUserAndStatus(userId, models.OrderStatus(status))
+	if err != nil {
+		c.JSON(404, gin.H{"error": "No orders found"})
+		return
+	}
+
+	c.JSON(200, orders)
+}
+
+// DeleteAllOrders Orders godoc
+// @Summary delete all orders
+// @Tags orders
+// @Schemes
+// @Description delete all orders
+// @Success 200
+// @Router /orders [delete]
+func (h *OrderHandler) DeleteAllOrders(c *gin.Context) {
+	err := h.orders.DeleteAll()
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Cloud not delete orders"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "All orders deleted"})
+}
+
+// DeleteAllMyOrders Orders godoc
+// @Summary delete all orders by user
+// @Tags orders
+// @Schemes
+// @Description delete all orders by user
+// @Security ApiKeyAuth
+// @Success 200
+// @Router /orders/me [delete]
+func (h *OrderHandler) DeleteAllMyOrders(c *gin.Context) {
+	userId := c.MustGet("userId").(string)
+
+	err := h.orders.DeleteAllByUser(userId)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Cloud not delete orders"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "All orders deleted"})
 }

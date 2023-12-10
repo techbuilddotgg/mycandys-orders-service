@@ -70,6 +70,82 @@ const docTemplate = `{
                         "description": "Created"
                     }
                 }
+            },
+            "delete": {
+                "description": "delete all orders",
+                "tags": [
+                    "orders"
+                ],
+                "summary": "delete all orders",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/orders/me": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get all orders by user",
+                "tags": [
+                    "orders"
+                ],
+                "summary": "get all orders by user",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "delete all orders by user",
+                "tags": [
+                    "orders"
+                ],
+                "summary": "delete all orders by user",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/orders/me/status/{status}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get all orders by status",
+                "tags": [
+                    "orders"
+                ],
+                "summary": "get all orders by status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "order status",
+                        "name": "status",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
             }
         },
         "/orders/status/{status}": {
@@ -206,6 +282,9 @@ const docTemplate = `{
                 "address": {
                     "type": "string"
                 },
+                "cartId": {
+                    "type": "string"
+                },
                 "city": {
                     "type": "string"
                 },
@@ -223,9 +302,6 @@ const docTemplate = `{
                 },
                 "postalCode": {
                     "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/models.OrderStatus"
                 },
                 "userId": {
                     "type": "string"
@@ -278,6 +354,13 @@ const docTemplate = `{
                     "$ref": "#/definitions/models.OrderStatus"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

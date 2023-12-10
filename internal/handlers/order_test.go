@@ -3,11 +3,16 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/mycandys/orders/internal/middlewares"
 	"github.com/mycandys/orders/internal/mocks"
 	_ "github.com/mycandys/orders/internal/mocks"
 	"github.com/mycandys/orders/internal/models"
 	_ "github.com/mycandys/orders/internal/models"
+	_ "github.com/mycandys/orders/internal/repository"
+	"github.com/mycandys/orders/internal/services"
+	_ "go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"net/http/httptest"
@@ -162,7 +167,9 @@ func TestCreateOrder(t *testing.T) {
 	server := gin.Default()
 
 	handler := &OrderHandler{
-		orders: &mocks.OrderRepositoryMock{},
+		orders:        &mocks.OrderRepositoryMock{},
+		notifications: nil,
+		carts:         nil,
 	}
 
 	dto := models.CreateOrderDTO{
@@ -223,7 +230,9 @@ func TestUpdateOrder(t *testing.T) {
 	server := gin.Default()
 
 	handler := &OrderHandler{
-		orders: &mocks.OrderRepositoryMock{},
+		orders:        &mocks.OrderRepositoryMock{},
+		notifications: nil,
+		carts:         nil,
 	}
 
 	status := models.OrderStatusShipped
@@ -497,5 +506,349 @@ func TestGetOrderByStatusNotFound(t *testing.T) {
 
 	if len(body) != 0 {
 		t.Errorf("handler returned unexpected body: got %v want %v", rec.Body.String(), "[]")
+	}
+}
+
+func TestGetOrdersByUserAndStatus(t *testing.T) {
+	server := gin.Default()
+
+	handler := &OrderHandler{
+		orders: &mocks.OrderRepositoryMock{},
+	}
+
+	order := &models.Order{
+		ID:                   primitive.NewObjectID(),
+		UserID:               "1",
+		Items:                make([]models.Item, 0),
+		Cost:                 100.0,
+		Status:               models.OrderStatusPending,
+		ExpectedDeliveryDate: "2021-01-01",
+		DeliveredAt:          "2021-01-01",
+		Address:              "address",
+		Country:              "country",
+		City:                 "city",
+		PostalCode:           "postalCode",
+		CreatedAt:            "2021-01-01",
+		UpdatedAt:            "2021-01-01",
+	}
+
+	handler.orders.(*mocks.OrderRepositoryMock).On("FindByUserAndStatus", order.UserID, order.Status).Return([]*models.Order{
+		order,
+	}, nil)
+
+	middleware := &middlewares.Middleware{
+		AuthService: &mocks.AuthServiceMock{},
+	}
+
+	middleware.AuthService.(*mocks.AuthServiceMock).On("ValidateToken", "token").Return(&services.VerifyTokenResponse{
+		UserId: order.UserID,
+	}, nil)
+
+	requiredAuth := server.Use(middleware.Auth())
+
+	requiredAuth.GET("/orders/me/status/:status", handler.GetMyOrdersByStatus)
+
+	req, _ := http.NewRequest("GET", "/orders/me/status/"+string(order.Status), nil)
+
+	req.Header.Set("Authorization", "Bearer token")
+
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	if status := rec.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+
+	var body []models.Order
+	_ = json.Unmarshal(rec.Body.Bytes(), &body)
+
+	if len(body) != 1 {
+		t.Errorf("handler returned unexpected body: got %v want %v", rec.Body.String(), "[]")
+	}
+}
+
+func TestGetOrdersByUserAndStatusNotFound(t *testing.T) {
+	server := gin.Default()
+
+	handler := &OrderHandler{
+		orders: &mocks.OrderRepositoryMock{},
+	}
+
+	middleware := &middlewares.Middleware{
+		AuthService: &mocks.AuthServiceMock{},
+	}
+
+	middleware.AuthService.(*mocks.AuthServiceMock).On("ValidateToken", "token").Return(&services.VerifyTokenResponse{
+		UserId: "1",
+	}, nil)
+
+	handler.orders.(*mocks.OrderRepositoryMock).On("FindByUserAndStatus", "1", models.OrderStatus("invalid")).Return(nil, nil)
+
+	requiredAuth := server.Use(middleware.Auth())
+
+	requiredAuth.GET("/orders/me/status/:status", handler.GetMyOrdersByStatus)
+
+	req, _ := http.NewRequest("GET", "/orders/me/status/invalid", nil)
+
+	req.Header.Set("Authorization", "Bearer token")
+
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	var body []models.Order
+	_ = json.Unmarshal(rec.Body.Bytes(), &body)
+
+	if len(body) != 0 {
+		t.Errorf("handler returned unexpected body: got %v want %v", rec.Body.String(), "[]")
+	}
+}
+
+func TestGetOrdersByUserAndStatusUnauthorized(t *testing.T) {
+	server := gin.Default()
+
+	handler := &OrderHandler{
+		orders: &mocks.OrderRepositoryMock{},
+	}
+
+	middleware := &middlewares.Middleware{
+		AuthService: &mocks.AuthServiceMock{},
+	}
+
+	middleware.AuthService.(*mocks.AuthServiceMock).On("ValidateToken", "token").Return(nil, errors.New("unauthorized"))
+
+	handler.orders.(*mocks.OrderRepositoryMock).On("FindByUserAndStatus", "1", models.OrderStatus("invalid")).Return(nil, nil)
+
+	requiredAuth := server.Use(middleware.Auth())
+
+	requiredAuth.GET("/orders/me/status/:status", handler.GetMyOrdersByStatus)
+
+	req, _ := http.NewRequest("GET", "/orders/me/status/invalid", nil)
+
+	req.Header.Set("Authorization", "Bearer token")
+
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	if status := rec.Code; status != http.StatusUnauthorized {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusUnauthorized)
+	}
+}
+
+func TestGetMyOrders(t *testing.T) {
+	server := gin.Default()
+
+	handler := &OrderHandler{
+		orders: &mocks.OrderRepositoryMock{},
+	}
+
+	order := &models.Order{
+		ID:                   primitive.NewObjectID(),
+		UserID:               "1",
+		Items:                make([]models.Item, 0),
+		Cost:                 100.0,
+		Status:               models.OrderStatusPending,
+		ExpectedDeliveryDate: "2021-01-01",
+		DeliveredAt:          "2021-01-01",
+		Address:              "address",
+		Country:              "country",
+		City:                 "city",
+		PostalCode:           "postalCode",
+		CreatedAt:            "2021-01-01",
+		UpdatedAt:            "2021-01-01",
+	}
+
+	handler.orders.(*mocks.OrderRepositoryMock).On("FindByUser", order.UserID).Return([]*models.Order{
+		order,
+	}, nil)
+
+	middleware := &middlewares.Middleware{
+		AuthService: &mocks.AuthServiceMock{},
+	}
+
+	middleware.AuthService.(*mocks.AuthServiceMock).On("ValidateToken", "token").Return(&services.VerifyTokenResponse{
+		UserId: order.UserID,
+	}, nil)
+
+	requiredAuth := server.Use(middleware.Auth())
+
+	requiredAuth.GET("/orders/me", handler.GetMyOrders)
+
+	req, _ := http.NewRequest("GET", "/orders/me", nil)
+
+	req.Header.Set("Authorization", "Bearer token")
+
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	if status := rec.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+
+	var body []models.Order
+	_ = json.Unmarshal(rec.Body.Bytes(), &body)
+
+	if len(body) != 1 {
+		t.Errorf("handler returned unexpected body: got %v want %v", rec.Body.String(), "[]")
+	}
+}
+
+func TestGetMyOrdersNotFound(t *testing.T) {
+	server := gin.Default()
+
+	handler := &OrderHandler{
+		orders: &mocks.OrderRepositoryMock{},
+	}
+
+	middleware := &middlewares.Middleware{
+		AuthService: &mocks.AuthServiceMock{},
+	}
+
+	middleware.AuthService.(*mocks.AuthServiceMock).On("ValidateToken", "token").Return(&services.VerifyTokenResponse{
+		UserId: "1",
+	}, nil)
+
+	handler.orders.(*mocks.OrderRepositoryMock).On("FindByUser", "1").Return(nil, nil)
+
+	requiredAuth := server.Use(middleware.Auth())
+
+	requiredAuth.GET("/orders/me", handler.GetMyOrders)
+
+	req, _ := http.NewRequest("GET", "/orders/me", nil)
+
+	req.Header.Set("Authorization", "Bearer token")
+
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	var body []models.Order
+	_ = json.Unmarshal(rec.Body.Bytes(), &body)
+
+	if len(body) != 0 {
+		t.Errorf("handler returned unexpected body: got %v want %v", rec.Body.String(), "[]")
+	}
+}
+
+func TestGetMyOrdersUnauthorized(t *testing.T) {
+	server := gin.Default()
+
+	handler := &OrderHandler{
+		orders: &mocks.OrderRepositoryMock{},
+	}
+
+	middleware := &middlewares.Middleware{
+		AuthService: &mocks.AuthServiceMock{},
+	}
+
+	middleware.AuthService.(*mocks.AuthServiceMock).On("ValidateToken", "token").Return(nil, errors.New("unauthorized"))
+
+	handler.orders.(*mocks.OrderRepositoryMock).On("FindByUser", "1").Return(nil, nil)
+
+	requiredAuth := server.Use(middleware.Auth())
+
+	requiredAuth.GET("/orders/me", handler.GetMyOrders)
+
+	req, _ := http.NewRequest("GET", "/orders/me", nil)
+
+	req.Header.Set("Authorization", "Bearer token")
+
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	if status := rec.Code; status != http.StatusUnauthorized {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusUnauthorized)
+	}
+}
+
+func TestDeleteAllOrders(t *testing.T) {
+	server := gin.Default()
+
+	handler := &OrderHandler{
+		orders: &mocks.OrderRepositoryMock{},
+	}
+
+	handler.orders.(*mocks.OrderRepositoryMock).On("DeleteAll").Return(nil)
+
+	server.DELETE("/orders", handler.DeleteAllOrders)
+
+	req, _ := http.NewRequest("DELETE", "/orders", nil)
+
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	if status := rec.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+}
+
+func TestDeleteAllMyOrders(t *testing.T) {
+	server := gin.Default()
+
+	handler := &OrderHandler{
+		orders: &mocks.OrderRepositoryMock{},
+	}
+
+	handler.orders.(*mocks.OrderRepositoryMock).On("DeleteAllByUser", "1").Return(nil)
+
+	middleware := &middlewares.Middleware{
+		AuthService: &mocks.AuthServiceMock{},
+	}
+
+	middleware.AuthService.(*mocks.AuthServiceMock).On("ValidateToken", "token").Return(&services.VerifyTokenResponse{
+		UserId: "1",
+	}, nil)
+
+	requiredAuth := server.Use(middleware.Auth())
+
+	requiredAuth.DELETE("/orders/me", handler.DeleteAllMyOrders)
+
+	req, _ := http.NewRequest("DELETE", "/orders/me", nil)
+
+	req.Header.Set("Authorization", "Bearer token")
+
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	if status := rec.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+}
+
+func TestDeleteAllMyOrdersUnauthorized(t *testing.T) {
+	server := gin.Default()
+
+	handler := &OrderHandler{
+		orders: &mocks.OrderRepositoryMock{},
+	}
+
+	handler.orders.(*mocks.OrderRepositoryMock).On("DeleteByUser", "1").Return(nil)
+
+	middleware := &middlewares.Middleware{
+		AuthService: &mocks.AuthServiceMock{},
+	}
+
+	middleware.AuthService.(*mocks.AuthServiceMock).On("ValidateToken", "token").Return(nil, errors.New("unauthorized"))
+
+	requiredAuth := server.Use(middleware.Auth())
+
+	requiredAuth.DELETE("/orders/me", handler.DeleteAllMyOrders)
+
+	req, _ := http.NewRequest("DELETE", "/orders/me", nil)
+
+	req.Header.Set("Authorization", "Bearer token")
+
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	if status := rec.Code; status != http.StatusUnauthorized {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusUnauthorized)
 	}
 }
