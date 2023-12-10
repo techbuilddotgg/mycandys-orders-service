@@ -12,6 +12,7 @@ type Item struct {
 	Description string  `bson:"description" json:"description"`
 	Category    string  `bson:"category" json:"category"`
 	ImageUrl    string  `bson:"image_url" json:"imgUrl"`
+	Quantity    int     `bson:"quantity" json:"quantity"`
 }
 
 type OrderStatus string
