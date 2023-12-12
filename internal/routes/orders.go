@@ -6,7 +6,7 @@ import (
 	"github.com/mycandys/orders/internal/middlewares"
 )
 
-func setupOrdersRoutes(app *gin.Engine) {
+func setupOrdersRoutes(app *gin.Engine, m *middlewares.Middleware) {
 	orders := app.Group("/orders")
 	ordersHandler := handlers.NewOrderHandler()
 
@@ -19,8 +19,7 @@ func setupOrdersRoutes(app *gin.Engine) {
 	orders.DELETE(":id", ordersHandler.DeleteOrder)
 	orders.DELETE("", ordersHandler.DeleteAllOrders)
 
-	middleware := middlewares.NewMiddleware()
-	requiredAuth := orders.Use(middleware.Auth())
+	requiredAuth := orders.Use(m.Auth())
 
 	requiredAuth.GET("/me", ordersHandler.GetMyOrders)
 	requiredAuth.GET("/me/status/:status", ordersHandler.GetMyOrdersByStatus)

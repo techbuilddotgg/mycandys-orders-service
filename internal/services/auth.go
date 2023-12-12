@@ -9,6 +9,10 @@ import (
 	"net/http"
 )
 
+type IAuthService interface {
+	ValidateToken(token string) (*VerifyTokenResponse, error)
+}
+
 type AuthService struct {
 	URL string
 }
