@@ -10,7 +10,11 @@ import (
 
 var Db *mongo.Database
 
-func Connect(uri string) *mongo.Client {
+func Connect() *mongo.Client {
+	uri, err := env.GetEnvVar(env.DATABASE_URL)
+	if err != nil {
+		panic(err)
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
