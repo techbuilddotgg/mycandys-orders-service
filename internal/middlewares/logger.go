@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/mycandys/orders/internal/env"
 	"github.com/mycandys/orders/internal/rabbitmq"
+	"github.com/mycandys/orders/internal/services"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"
@@ -75,6 +76,8 @@ func (m *Middleware) Logger() gin.HandlerFunc {
 
 	queue := rabbitmq.DeclareQueue(queueName)
 
+	analytics := services.NewAnalyticsService()
+
 	return func(c *gin.Context) {
 		correlationId := c.GetHeader("X-Correlation-Id")
 
@@ -88,7 +91,9 @@ func (m *Middleware) Logger() gin.HandlerFunc {
 
 		blw := &bodyLogWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
 		c.Writer = blw
+
 		c.Next()
+
 		status := c.Writer.Status()
 
 		method := c.Request.Method
@@ -114,6 +119,7 @@ func (m *Middleware) Logger() gin.HandlerFunc {
 			c.String(http.StatusInternalServerError, "Error marshalling log")
 		}
 
+		analytics.SendEndpointCall(url)
 		rabbitmq.Publish(exchangeName, queue.Name, payload, c.Request.Context())
 	}
 }
