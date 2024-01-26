@@ -7,6 +7,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/mycandys/orders/internal/database"
 	"github.com/mycandys/orders/internal/env"
+	"github.com/mycandys/orders/internal/rabbitmq"
 	"github.com/mycandys/orders/internal/routes"
 	"github.com/mycandys/orders/internal/swagger"
 	"log"
@@ -31,8 +32,8 @@ func main() {
 	db := database.Connect()
 	defer database.Disconnect(db, context.Background())
 
-	//amqp := rabbitmq.Connect()
-	//defer rabbitmq.Close(amqp)
+	amqp := rabbitmq.Connect()
+	defer rabbitmq.Close(amqp)
 
 	app := routes.InitRouter()
 	swagger.InitInfo()

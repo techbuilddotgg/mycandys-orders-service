@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/mycandys/orders/internal/env"
+	"github.com/mycandys/orders/internal/rabbitmq"
 	"github.com/mycandys/orders/internal/services"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -69,10 +71,10 @@ func (w bodyLogWriter) Write(b []byte) (int, error) {
 }
 
 func (m *Middleware) Logger() gin.HandlerFunc {
-	//queueName, _ := env.GetEnvVar(env.QUEUE_NAME)
-	//exchangeName, _ := env.GetEnvVar(env.EXCHANGE_NAME)
-	//
-	//queue := rabbitmq.DeclareQueue(queueName)
+	queueName, _ := env.GetEnvVar(env.QUEUE_NAME)
+	exchangeName, _ := env.GetEnvVar(env.EXCHANGE_NAME)
+
+	queue := rabbitmq.DeclareQueue(queueName)
 
 	analytics := services.NewAnalyticsService()
 
@@ -112,12 +114,12 @@ func (m *Middleware) Logger() gin.HandlerFunc {
 			m.LogInfo(serviceLog)
 		}
 
-		_, err := json.Marshal(serviceLog)
+		payload, err := json.Marshal(serviceLog)
 		if err != nil {
 			c.String(http.StatusInternalServerError, "Error marshalling log")
 		}
 
 		analytics.SendEndpointCall(url)
-		//rabbitmq.Publish(exchangeName, queue.Name, payload, c.Request.Context())
+		rabbitmq.Publish(exchangeName, queue.Name, payload, c.Request.Context())
 	}
 }
